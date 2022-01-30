@@ -1,0 +1,56 @@
+version: '3.7'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: chat-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+
+  server:
+    container_name: chat-server
+    build:
+      context: .
+      dockerfile: server.Dockerfile
+    environment:
+      RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"
+    depends_on:
+      - rabbitmq
+
+  client1:
+    container_name: chat-client1
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: client.Dockerfile
+    environment:
+      RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"
+      RABBITMQ_API_URL: "http://rabbitmq:15672/"
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      USERNAME: "maksim"
+    depends_on:
+      - rabbitmq
+      - server
+
+  client2:
+    container_name: chat-client2
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: client.Dockerfile
+    environment:
+      RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"
+      RABBITMQ_API_URL: "http://rabbitmq:15672/"
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      USERNAME: "viktor"
+    depends_on:
+      - rabbitmq
+      - server
